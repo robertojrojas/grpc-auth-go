@@ -34,16 +34,24 @@ gencert: init
 		-ca-key=ca-key.pem \
 		-config=${SSL_CONF}/ca-config.json \
 		-profile=client \
-		-cn="root" \
-		${SSL_CONF}/client-csr.json | cfssljson -bare root-client
+		-cn="gateway" \
+		${SSL_CONF}/client-csr.json | cfssljson -bare gateway-client
 
 	cfssl gencert \
 		-ca=ca.pem \
 		-ca-key=ca-key.pem \
 		-config=${SSL_CONF}/ca-config.json \
 		-profile=client \
-		-cn="nobody" \
-		${SSL_CONF}/client-csr.json | cfssljson -bare nobody-client
+		-cn="lifecyclemanager" \
+		${SSL_CONF}/client-csr.json | cfssljson -bare lifecyclemanager-client
+
+	cfssl gencert \
+		-ca=ca.pem \
+		-ca-key=ca-key.pem \
+		-config=${SSL_CONF}/ca-config.json \
+		-profile=client \
+		-cn="slackbot" \
+		${SSL_CONF}/client-csr.json | cfssljson -bare slackbot-client
 # END: multi_client
 
 # START: begin

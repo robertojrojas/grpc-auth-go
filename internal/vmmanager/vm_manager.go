@@ -3,6 +3,7 @@ package vmmanager
 import (
 	api "github.com/robertojrojas/grpc-auth/api/v1"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 type grpcServer struct {
@@ -31,5 +32,9 @@ func NewGRPCServer() (
 		return nil, err
 	}
 	api.RegisterVMManagerServer(gsrv, srv)
+
+	// Register reflection service on gRPC server.
+	reflection.Register(gsrv)
+
 	return gsrv, nil
 }

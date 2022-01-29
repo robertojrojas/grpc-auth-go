@@ -1,8 +1,11 @@
 package usermanager
 
 import (
+	"context"
+
 	api "github.com/robertojrojas/grpc-auth/api/v1"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 type grpcServer struct {
@@ -31,5 +34,14 @@ func NewGRPCServer() (
 		return nil, err
 	}
 	api.RegisterUserManagerServer(gsrv, srv)
+
+	// Register reflection service on gRPC server.
+	reflection.Register(gsrv)
+
 	return gsrv, nil
+}
+
+func (s *grpcServer) Create(ctx context.Context, req *api.User) (
+	*api.User, error) {
+	return req, nil
 }
