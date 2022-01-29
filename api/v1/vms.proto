@@ -7,7 +7,7 @@ option go_package = "github.com/robertojrojas/grpc-auth/api/vms_v1";
 // clients: gateway (GW), lifecycle manager (LM), slackbot (SLB)
 
 service UserManager {
-   rpc Create(User) returns (User);   // SLB
+   rpc Create(User) returns (User);       // SLB
    rpc GetUser(Username) returns (User);  // GW
 }
 

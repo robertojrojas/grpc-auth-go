@@ -6,6 +6,15 @@ SSL_CONF=ssl_conf
 init:
 	mkdir -p ${CONFIG_PATH}
 
+.PHONY: client
+client:
+	go build -o grpc-auth-client cmd/client/main.go
+
+.PHONY: server
+server:
+	go build -o grpc-auth-server ./main.go
+
+
 .PHONY: gencert
 gencert: init
 	cfssl gencert \

@@ -38,6 +38,7 @@ func BuildDBIfNeeded() error {
 	if err != nil {
 		return err
 	}
+	defer rows.Close()
 
 	schemaExists := false
 	for rows.Next() {
