@@ -2,7 +2,6 @@ package usermanager
 
 import (
 	"context"
-	"strings"
 
 	"github.com/google/uuid"
 	api "github.com/robertojrojas/grpc-auth/api/v1"
@@ -46,7 +45,7 @@ func NewGRPCServer() (
 
 func (s *grpcServer) Create(ctx context.Context, req *api.User) (
 	*api.User, error) {
-	req.VmUuid = strings.Replace(uuid.New().String(), "-", "", -1)
+	req.VmUuid = uuid.New().String()
 
 	// Insert User to DB
 	// create the postgres db connection
