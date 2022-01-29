@@ -5,11 +5,18 @@ import (
 	"log"
 	"net"
 
+	"github.com/robertojrojas/grpc-auth/internal/db"
 	"github.com/robertojrojas/grpc-auth/internal/usermanager"
 	"github.com/robertojrojas/grpc-auth/internal/vmmanager"
 )
 
 func main() {
+
+	err := db.BuildDBIfNeeded()
+	if err != nil {
+		log.Fatalf("unable to init db: %v\n", err)
+	}
+
 	userServer, err := usermanager.NewGRPCServer()
 	if err != nil {
 		log.Fatalf("failed to start UserManager GRPC Server: %v\n", userServer)

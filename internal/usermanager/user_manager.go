@@ -2,8 +2,11 @@ package usermanager
 
 import (
 	"context"
+	"strings"
 
+	"github.com/google/uuid"
 	api "github.com/robertojrojas/grpc-auth/api/v1"
+	"github.com/robertojrojas/grpc-auth/internal/db"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -43,5 +46,27 @@ func NewGRPCServer() (
 
 func (s *grpcServer) Create(ctx context.Context, req *api.User) (
 	*api.User, error) {
+	req.VmUuid = strings.Replace(uuid.New().String(), "-", "", -1)
+
+	// Insert User to DB
+	// create the postgres db connection
+	dbConn, err := db.CreateConnection()
+	if err != nil {
+		return nil, err
+	}
+	// close the db connection
+	defer dbConn.Close()
+
+	tx := dbConn.MustBegin()
+	_, err = dbConn.NamedExec(`INSERT INTO users (name,uuid) VALUES (:name,:uuid)`,
+		map[string]interface{}{
+			"name": req.UserName,
+			"uuid": req.VmUuid,
+		})
+	if err != nil {
+		return nil, err
+	}
+	tx.Commit()
+
 	return req, nil
 }
