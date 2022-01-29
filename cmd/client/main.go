@@ -23,9 +23,9 @@ var (
 
 func init() {
 	flag.StringVar(&serverAddr, "serverAddr", ":50051", "GRPC Server Address")
-	flag.StringVar(&clientCert, "clientCert", "../../.ssl/gateway-client.pem", "client Cert")
-	flag.StringVar(&clientKey, "clientKey", "../../.ssl/gateway-client-key.pem", "client Key")
-	flag.StringVar(&caCert, "caCert", "../../.ssl/ca.pem", "CA Cert")
+	flag.StringVar(&clientCert, "clientCert", ".ssl/gateway-client.pem", "client Cert")
+	flag.StringVar(&clientKey, "clientKey", ".ssl/gateway-client-key.pem", "client Key")
+	flag.StringVar(&caCert, "caCert", ".ssl/ca.pem", "CA Cert")
 }
 
 func main() {
