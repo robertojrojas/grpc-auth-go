@@ -77,7 +77,7 @@ func CreateConnection() (*sqlx.DB, error) {
 		return nil, err
 	}
 
-	fmt.Println("CreateConnection: Successfully connected!")
-	// return the connection
+	//fmt.Println("CreateConnection: Successfully connected!")
+
 	return db, nil
 }

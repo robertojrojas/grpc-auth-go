@@ -76,6 +76,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to call GetUser: %v", err)
 	}
-
 	fmt.Printf("User is: %#v\n", user)
+
+	// The following operation could fail if the certficate does not allow it
+	newUser := &api.User{
+		UserName: "newuser",
+	}
+	retUser, err := rgc.Create(ctx, newUser)
+	if err != nil {
+		log.Fatalf("this could fail if client cert does not allow it: %v\n", err)
+	}
+	fmt.Printf("retUser is: %#v\n", retUser)
+
 }
