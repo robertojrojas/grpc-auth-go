@@ -39,7 +39,7 @@ func main() {
 		vmServer.Serve(l)
 	}()
 
-	fmt.Printf("listening on %s\n", l.Addr().String())
+	fmt.Printf("export GRPC_SERVER='%s'\n", l.Addr().String())
 	fmt.Scanln()
 	userServer.Stop()
 	vmServer.Stop()

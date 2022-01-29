@@ -32,6 +32,7 @@ func BuildDBIfNeeded() error {
 	if err != nil {
 		return err
 	}
+	defer dbConn.Close()
 
 	rows, err := dbConn.Queryx(schemaCheck)
 	if err != nil {

@@ -19,7 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserManagerClient interface {
 	Create(ctx context.Context, in *User, opts ...grpc.CallOption) (*User, error)
-	GetUUID(ctx context.Context, in *User, opts ...grpc.CallOption) (*UUID, error)
+	GetUser(ctx context.Context, in *Username, opts ...grpc.CallOption) (*User, error)
 }
 
 type userManagerClient struct {
@@ -39,9 +39,9 @@ func (c *userManagerClient) Create(ctx context.Context, in *User, opts ...grpc.C
 	return out, nil
 }
 
-func (c *userManagerClient) GetUUID(ctx context.Context, in *User, opts ...grpc.CallOption) (*UUID, error) {
-	out := new(UUID)
-	err := c.cc.Invoke(ctx, "/vms.v1.UserManager/GetUUID", in, out, opts...)
+func (c *userManagerClient) GetUser(ctx context.Context, in *Username, opts ...grpc.CallOption) (*User, error) {
+	out := new(User)
+	err := c.cc.Invoke(ctx, "/vms.v1.UserManager/GetUser", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func (c *userManagerClient) GetUUID(ctx context.Context, in *User, opts ...grpc.
 // for forward compatibility
 type UserManagerServer interface {
 	Create(context.Context, *User) (*User, error)
-	GetUUID(context.Context, *User) (*UUID, error)
+	GetUser(context.Context, *Username) (*User, error)
 	mustEmbedUnimplementedUserManagerServer()
 }
 
@@ -64,8 +64,8 @@ type UnimplementedUserManagerServer struct {
 func (UnimplementedUserManagerServer) Create(context.Context, *User) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
 }
-func (UnimplementedUserManagerServer) GetUUID(context.Context, *User) (*UUID, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUUID not implemented")
+func (UnimplementedUserManagerServer) GetUser(context.Context, *Username) (*User, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUser not implemented")
 }
 func (UnimplementedUserManagerServer) mustEmbedUnimplementedUserManagerServer() {}
 
@@ -98,20 +98,20 @@ func _UserManager_Create_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserManager_GetUUID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(User)
+func _UserManager_GetUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Username)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserManagerServer).GetUUID(ctx, in)
+		return srv.(UserManagerServer).GetUser(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/vms.v1.UserManager/GetUUID",
+		FullMethod: "/vms.v1.UserManager/GetUser",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserManagerServer).GetUUID(ctx, req.(*User))
+		return srv.(UserManagerServer).GetUser(ctx, req.(*Username))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -128,8 +128,8 @@ var UserManager_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserManager_Create_Handler,
 		},
 		{
-			MethodName: "GetUUID",
-			Handler:    _UserManager_GetUUID_Handler,
+			MethodName: "GetUser",
+			Handler:    _UserManager_GetUser_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

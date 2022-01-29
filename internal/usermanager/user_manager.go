@@ -19,10 +19,8 @@ func newgrpcServer() (*grpcServer, error) {
 	return srv, nil
 }
 
-func NewGRPCServer() (
-	*grpc.Server,
-	error,
-) {
+func NewGRPCServer() (*grpc.Server, error) {
+
 	// opts = append(opts, grpc.StreamInterceptor(
 	// 	grpc_middleware.ChainStreamServer(
 	// 		grpc_auth.StreamServerInterceptor(authenticate),
@@ -43,8 +41,7 @@ func NewGRPCServer() (
 	return gsrv, nil
 }
 
-func (s *grpcServer) Create(ctx context.Context, req *api.User) (
-	*api.User, error) {
+func (s *grpcServer) Create(ctx context.Context, req *api.User) (*api.User, error) {
 	req.VmUuid = uuid.New().String()
 
 	// Insert User to DB
@@ -68,4 +65,32 @@ func (s *grpcServer) Create(ctx context.Context, req *api.User) (
 	tx.Commit()
 
 	return req, nil
+}
+
+func (s *grpcServer) GetUser(ctx context.Context, req *api.Username) (*api.User, error) {
+	dbConn, err := db.CreateConnection()
+	if err != nil {
+		return nil, err
+	}
+	defer dbConn.Close()
+
+	rows, err := dbConn.NamedQuery(`SELECT name, uuid FROM users WHERE name=:fn`, map[string]interface{}{"fn": req.GetValue()})
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	user := &api.User{}
+	if !rows.Next() {
+		return user, nil
+	}
+	err = rows.Scan(
+		&user.UserName,
+		&user.VmUuid,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }
