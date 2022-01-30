@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
@@ -33,8 +34,13 @@ func newgrpcServer() (*grpcServer, error) {
 	return srv, nil
 }
 
-var misconfiguredClientAuthErrMsg string = `AuthInfo.State.PeerCertificates is empty. On the server side, it can be
+var (
+	misconfiguredClientAuthErrMsg string = `AuthInfo.State.PeerCertificates is empty. On the server side, it can be
 empty if Config.ClientAuth is not RequireAnyClientCert or RequireAndVerifyClientCert.`
+
+	errMissingMetadata = status.Errorf(codes.InvalidArgument, "missing metadata")
+	errInvalidToken    = status.Errorf(codes.Unauthenticated, "invalid token")
+)
 
 func NewGRPCServer(serverCert, serverKey, caCert string) (*grpc.Server, error) {
 
@@ -141,23 +147,93 @@ func (s *grpcServer) GetUser(ctx context.Context, req *api.Username) (*api.User,
 }
 
 func (s *grpcServer) unaryInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
-	// // authentication (token verification)
-	// md, ok := metadata.FromIncomingContext(ctx)
+	// peer, ok := peer.FromContext(ctx)
 	// if !ok {
-	// 	return nil, errMissingMetadata
+	// 	return ctx, status.New(
+	// 		codes.Unknown,
+	// 		"couldn't find peer info",
+	// 	).Err()
 	// }
-	// if !valid(md["authorization"]) {
-	// 	return nil, errInvalidToken
-	// }
-	// m, err := handler(ctx, req)
-	// if err != nil {
-	// 	logger("RPC failed with error %v", err)
-	// }
-	// return m, err
 
+	// // fmt.Printf("request: %#v\n", req)
+	// // fmt.Printf("info: %#v\n", info)
+	// // fmt.Printf("Peer: %#v\n", peer)
+
+	// if peer.AuthInfo == nil {
+	// 	fmt.Println("AuthInfo is nil....")
+	// 	return nil, status.New(codes.PermissionDenied, "no AuthInfo provided").Err()
+	// }
+
+	// tlsInfo := peer.AuthInfo.(credentials.TLSInfo)
+
+	// if tlsInfo.State.PeerCertificates == nil || len(tlsInfo.State.PeerCertificates) == 0 {
+	// 	fmt.Printf("auth error %s\n", misconfiguredClientAuthErrMsg)
+	// 	return nil, status.New(codes.PermissionDenied, misconfiguredClientAuthErrMsg).Err()
+	// }
+
+	// subject := tlsInfo.State.PeerCertificates[0].Subject.CommonName
+	// ctx = context.WithValue(ctx, subjectContextKey{}, subject)
+
+	// objectWildcard := "*"
+	// fullMethod := strings.Split(info.FullMethod, "/")
+	// action := fullMethod[len(fullMethod)-1]
+
+	// fmt.Printf("subject: %s is trying to perform action: %s - fullMethod: %s\n", subject, action, fullMethod)
+
+	// // for id, peerCert := range tlsInfo.State.PeerCertificates {
+	// // 	fmt.Printf("peerCert[%d]: %#v\n\n", id, peerCert)
+	// // }
+
+	// // subject = tlsInfo.State.VerifiedChains[0][0].Subject.CommonName
+	// // ctx = context.WithValue(ctx, subjectContextKey{}, subject)
+	// // fmt.Printf("VerifiedChains - subject: %s\n", subject)
+
+	// if err := s.authorizer.Authorize(
+	// 	subject,
+	// 	objectWildcard,
+	// 	action,
+	// ); err != nil {
+	// 	fmt.Printf("not authorized error: '%v'\n", err)
+	// 	return nil, err
+	// }
+
+	err := s.authorizeWithTLS(ctx, info.FullMethod)
+	if err != nil {
+		return nil, err
+	}
+
+	return handler(ctx, req)
+}
+
+func (s *grpcServer) authorizeWithToken(ctx context.Context, fm string) error {
+	// authentication (token verification)
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return errMissingMetadata
+	}
+	if !valid(md["authorization"]) {
+		return errInvalidToken
+	}
+
+	return nil
+}
+
+// valid validates the authorization.
+func valid(authorization []string) bool {
+	if len(authorization) < 1 {
+		return false
+	}
+	token := strings.TrimPrefix(authorization[0], "Bearer ")
+	// Perform the token validation here. For the sake of this example, the code
+	// here forgoes any of the usual OAuth2 token validation and instead checks
+	// for a token matching an arbitrary string.
+	return token == "some-secret-token"
+}
+
+func (s *grpcServer) authorizeWithTLS(ctx context.Context, fm string) error {
 	peer, ok := peer.FromContext(ctx)
 	if !ok {
-		return ctx, status.New(
+		return status.New(
 			codes.Unknown,
 			"couldn't find peer info",
 		).Err()
@@ -169,21 +245,21 @@ func (s *grpcServer) unaryInterceptor(ctx context.Context, req interface{}, info
 
 	if peer.AuthInfo == nil {
 		fmt.Println("AuthInfo is nil....")
-		return nil, status.New(codes.PermissionDenied, "no AuthInfo provided").Err()
+		return status.New(codes.PermissionDenied, "no AuthInfo provided").Err()
 	}
 
 	tlsInfo := peer.AuthInfo.(credentials.TLSInfo)
 
 	if tlsInfo.State.PeerCertificates == nil || len(tlsInfo.State.PeerCertificates) == 0 {
 		fmt.Printf("auth error %s\n", misconfiguredClientAuthErrMsg)
-		return nil, status.New(codes.PermissionDenied, misconfiguredClientAuthErrMsg).Err()
+		return status.New(codes.PermissionDenied, misconfiguredClientAuthErrMsg).Err()
 	}
 
 	subject := tlsInfo.State.PeerCertificates[0].Subject.CommonName
-	ctx = context.WithValue(ctx, subjectContextKey{}, subject)
+	//ctx = context.WithValue(ctx, subjectContextKey{}, subject)
 
 	objectWildcard := "*"
-	fullMethod := strings.Split(info.FullMethod, "/")
+	fullMethod := strings.Split(fm, "/")
 	action := fullMethod[len(fullMethod)-1]
 
 	fmt.Printf("subject: %s is trying to perform action: %s - fullMethod: %s\n", subject, action, fullMethod)
@@ -202,10 +278,11 @@ func (s *grpcServer) unaryInterceptor(ctx context.Context, req interface{}, info
 		action,
 	); err != nil {
 		fmt.Printf("not authorized error: '%v'\n", err)
-		return nil, err
+		return err
 	}
 
-	return handler(ctx, req)
+	return nil
+
 }
 
 func subject(ctx context.Context) string {
