@@ -1,0 +1,16 @@
+{
+    "CN": "GRP AUTH CA",
+    "key": {
+        "algo": "rsa",
+        "size": 2048
+    },
+    "names": [
+        {
+            "C": "US",
+            "L": "PA",
+            "ST": "Reading",
+            "O": "GRP AUTH Company",
+            "OU": "CA Services"
+        }
+    ]
+}

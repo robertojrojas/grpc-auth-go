@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package vms.v1;
+
+option go_package = "github.com/robertojrojas/grpc-auth/api/vms_v1";
+
+// clients: gateway (GW), lifecycle manager (LM), slackbot (SLB)
+
+service UserManager {
+   rpc Create(User) returns (User);       // SLB
+   rpc GetUser(Username) returns (User);  // GW
+}
+
+service VMManager {
+   rpc Create(User) returns (VMInfo);  // GW
+   rpc Start(User) returns (VMInfo);   // GW
+   rpc Stop(User) returns (VMInfo);    // GW, LM
+   rpc Delete(User) returns (VMInfo);  // LM
+}
+
+
+message User {
+   string user_id   = 1;
+   string user_name = 2;
+   string vm_uuid   = 3;
+}
+
+message VMInfo {
+  string status = 1; 
+}
+
+message Username {
+  string value = 1;
+}
+
+
